@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "f660a_log"
+version = "0.1.0"
+description = ""
+authors = ["false <false@wizard-limit.net>"]
+
+[tool.poetry.dependencies]
+python = "^3.7.1"
+requests = "^2.26.0"
+beautifulsoup4 = "^4.10.0"
+
+
+[tool.poetry.dev-dependencies]
+ipython = "^7.29.0"
+black = "^21.9b0"
+flake8 = "^4.0.1"
+flake8-docstrings = "^1.6.0"
+mypy = "^0.910"
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
