@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup  # type: ignore
 def enable_http_debug() -> None:
     """httpのデバッグを有効にする.
 
-    see: https://stackoverflow.com/questions/10588644/how-can-i-see-the-entire-http-request-thats-being-sent-by-my-python-application
+    see: https://stackoverflow.com/questions/10588644
     """
     http.client.HTTPConnection.debuglevel = 1
     logging.basicConfig()
