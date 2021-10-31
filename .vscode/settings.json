@@ -1,6 +1,12 @@
 {
     "editor.formatOnSave": true,
     "files.autoGuessEncoding": true,
+    "files.watcherExclude": {
+        "**/.git/**": true,
+        "**/.venv/**": true,
+        "**/.mypy_cache/**": true,
+        "**/log/**": true,
+    },
     "terminal.integrated.allowChords": false,
     "terminal.integrated.commandsToSkipShell": [
         "-workbench.action.quickOpen",
