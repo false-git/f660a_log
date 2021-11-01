@@ -4,4 +4,4 @@ set -e
 
 cd "${0%/*}"
 .venv/bin/python f660a_log.py > log/`date +%Y%m%d_%H%M%S`.csv
-.venv/bin/python f660a_graph.py log
+.venv/bin/python f660a_graph.py

@@ -41,12 +41,14 @@ def read_logs(logdir: str) -> pd.DataFrame:
     return pd.concat(dfs)
 
 
-def make_graph(df: pd.DataFrame, interface: str) -> None:
+def make_graph(df: pd.DataFrame, interface: str, outdir: str, period: int) -> None:
     """グラフを描く.
 
     Args:
         df: DataFrame
         interface: グラフにする系列
+        outdir: 出力ディレクトリ
+        period: データ量の間隔(秒)
     """
     df_t: pd.DataFrame = df[df["ポート名"] == interface].copy()
     df_t["受信したデータ量(Mbyte)"] = df_t["受信したデータ量(byte)"] / (1024 * 1024)
@@ -58,7 +60,7 @@ def make_graph(df: pd.DataFrame, interface: str) -> None:
         ("上り", "@{受信したデータ量(Mbyte)}{0,0.0}[MB]"),
     ]
     hover_tool: bm.HoverTool = bm.HoverTool(tooltips=tooltips, formatters={"@timestamp": "datetime"})
-    bp.output_file(f"graph/{interface}_acc.html", title=interface)
+    bp.output_file(os.path.join(outdir, f"{interface}_acc.html"), title=interface)
     fig: bp.figure = bp.figure(
         title=f"{interface} の累積データ量",
         x_axis_type="datetime",
@@ -76,7 +78,8 @@ def make_graph(df: pd.DataFrame, interface: str) -> None:
     fig.legend.location = "top_left"
     bp.save(fig)
 
-    df_d: pd.DataFrame = df_t[["受信したデータ量(Mbyte)", "送信したデータ量(Mbyte)"]].diff()
+    df_d: pd.DataFrame = df_t[["timestamp", "受信したデータ量(Mbyte)", "送信したデータ量(Mbyte)"]].diff()
+    df_d = df_d[["受信したデータ量(Mbyte)", "送信したデータ量(Mbyte)"]].div(df_d["timestamp"].dt.total_seconds(), axis=0) * period
     df_d = pd.concat([df_t[["timestamp"]], df_d], axis=1).iloc[1:]
     source = bp.ColumnDataSource(df_d)
     tooltips = [
@@ -85,9 +88,18 @@ def make_graph(df: pd.DataFrame, interface: str) -> None:
         ("上り", "@{受信したデータ量(Mbyte)}{0,0.0}[MB]"),
     ]
     hover_tool = bm.HoverTool(tooltips=tooltips, formatters={"@timestamp": "datetime"})
-    bp.output_file(f"graph/{interface}_diff.html", title=interface)
+    bp.output_file(os.path.join(outdir, f"{interface}_diff.html"), title=interface)
+    periodstr: str = f"{period}秒"
+    periodunits: typ.Dict[int, str] = {86400: "日", 3600: "時間", 60: "分"}
+    for unit, unitstr in periodunits.items():
+        if period >= unit:
+            if period % unit == 0:
+                periodstr = f"{period // unit}{unitstr}"
+            else:
+                periodstr = f"{period / unit}{unitstr}"
+            break
     fig = bp.figure(
-        title=f"{interface} の1時間毎データ量",
+        title=f"{interface} の{periodstr}あたりのデータ量",
         x_axis_type="datetime",
         x_axis_label="時刻",
         y_axis_label="データ量[MB]",
@@ -106,10 +118,13 @@ def make_graph(df: pd.DataFrame, interface: str) -> None:
 def main() -> None:
     """メイン."""
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
-    parser.add_argument("logdir", help="path of log directory")
+    parser.add_argument("-l", "--logdir", help="path of log directory", default="log")
+    parser.add_argument("-o", "--outdir", help="path of output directory", default="graph")
+    parser.add_argument("-p", "--period", type=int, help="period of graph[seconds]", default=3600)
+    parser.add_argument("-i", "--interface", help="interface", default="LAN1")
     args: argparse.Namespace = parser.parse_args()
     df: pd.DataFrame = read_logs(args.logdir)
-    make_graph(df, "LAN1")
+    make_graph(df, args.interface, args.outdir, args.period)
 
 
 if __name__ == "__main__":
