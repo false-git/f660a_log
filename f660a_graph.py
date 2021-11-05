@@ -53,11 +53,13 @@ def make_graph(df: pd.DataFrame, interface: str, outdir: str, period: int) -> No
     df_t: pd.DataFrame = df[df["ポート名"] == interface].copy()
     df_t["受信したデータ量(Mbyte)"] = df_t["受信したデータ量(byte)"] / (1024 * 1024)
     df_t["送信したデータ量(Mbyte)"] = df_t["送信したデータ量(byte)"] / (1024 * 1024)
+    df_t["受信したデータ量(Gbyte)"] = df_t["受信したデータ量(byte)"] / (1024 * 1024 * 1024)
+    df_t["送信したデータ量(Gbyte)"] = df_t["送信したデータ量(byte)"] / (1024 * 1024 * 1024)
     source: bp.ColumnDataSource = bp.ColumnDataSource(df_t)
     tooltips: typ.List[typ.Tuple[str, str]] = [
         ("time", "@timestamp{%F %T}"),
-        ("下り", "@{送信したデータ量(Mbyte)}{0,0.0}[MB]"),
-        ("上り", "@{受信したデータ量(Mbyte)}{0,0.0}[MB]"),
+        ("下り", "@{送信したデータ量(Gbyte)}{0,0.0}[GB]"),
+        ("上り", "@{受信したデータ量(Gbyte)}{0,0.0}[GB]"),
     ]
     hover_tool: bm.HoverTool = bm.HoverTool(tooltips=tooltips, formatters={"@timestamp": "datetime"})
     bp.output_file(os.path.join(outdir, f"{interface}_acc.html"), title=interface)
@@ -65,15 +67,15 @@ def make_graph(df: pd.DataFrame, interface: str, outdir: str, period: int) -> No
         title=f"{interface} の累積データ量",
         x_axis_type="datetime",
         x_axis_label="時刻",
-        y_axis_label="データ量[MB]",
+        y_axis_label="データ量[GB]",
         sizing_mode="stretch_both",
     )
     fig.add_tools(hover_tool)
     fmt: typ.List[str] = ["%H:%M"]
     fig.xaxis.formatter = bm.DatetimeTickFormatter(hours=fmt, hourmin=fmt, minutes=fmt)
-    fig.y_range = bm.Range1d(0, df_t[["受信したデータ量(Mbyte)", "送信したデータ量(Mbyte)"]].max().max() * 1.1)
-    fig.line("timestamp", "送信したデータ量(Mbyte)", legend_label="下り", line_color="green", source=source)
-    fig.line("timestamp", "受信したデータ量(Mbyte)", legend_label="上り", line_color="red", source=source)
+    fig.y_range = bm.Range1d(0, df_t[["受信したデータ量(Gbyte)", "送信したデータ量(Gbyte)"]].max().max() * 1.1)
+    fig.line("timestamp", "送信したデータ量(Gbyte)", legend_label="下り", line_color="green", source=source)
+    fig.line("timestamp", "受信したデータ量(Gbyte)", legend_label="上り", line_color="red", source=source)
     fig.legend.click_policy = "hide"
     fig.legend.location = "top_left"
     bp.save(fig)
