@@ -41,7 +41,7 @@ def read_logs(logdir: str) -> pd.DataFrame:
     return pd.concat(dfs)
 
 
-def make_graph(df: pd.DataFrame, interface: str, outdir: str, period: int) -> None:
+def make_graph(df: pd.DataFrame, interface: typ.Optional[str], outdir: str, period: int) -> None:
     """グラフを描く.
 
     Args:
@@ -50,7 +50,10 @@ def make_graph(df: pd.DataFrame, interface: str, outdir: str, period: int) -> No
         outdir: 出力ディレクトリ
         period: データ量の間隔(秒)
     """
-    df_t: pd.DataFrame = df[df["ポート名"] == interface].copy()
+    if interface is None:
+        df_t: pd.DataFrame = df[df["ポート名"] != "TA"].groupby("timestamp").sum().reset_index()
+    else:
+        df_t = df[df["ポート名"] == interface].copy()
     df_t["受信したデータ量(Mbyte)"] = df_t["受信したデータ量(byte)"] / (1024 * 1024)
     df_t["送信したデータ量(Mbyte)"] = df_t["送信したデータ量(byte)"] / (1024 * 1024)
     df_t["受信したデータ量(Gbyte)"] = df_t["受信したデータ量(byte)"] / (1024 * 1024 * 1024)
@@ -123,7 +126,7 @@ def main() -> None:
     parser.add_argument("-l", "--logdir", help="path of log directory", default="log")
     parser.add_argument("-o", "--outdir", help="path of output directory", default="graph")
     parser.add_argument("-p", "--period", type=int, help="period of graph[seconds]", default=3600)
-    parser.add_argument("-i", "--interface", help="interface", default="LAN1")
+    parser.add_argument("-i", "--interface", help="interface")
     args: argparse.Namespace = parser.parse_args()
     df: pd.DataFrame = read_logs(args.logdir)
     make_graph(df, args.interface, args.outdir, args.period)
