@@ -87,16 +87,26 @@ def main(host: str, username: str, password: str):
     soup = BeautifulSoup(res3.text, "html.parser")
     index: int = -1
     values: typ.List = []
-    for td in soup.find_all("td"):
-        if index != -1:
-            values[index] = td.text.strip()
-            index = -1
-        else:
-            index = indexdic.get(td.text.strip(), -1)
-            if index == 0:
-                if len(values) > 0:
-                    print(", ".join(values))
-                values = [""] * len(columns)
+    with open("zabbix.trap", "wt") as zabbix:
+        for td in soup.find_all("td"):
+            if index != -1:
+                values[index] = td.text.strip()
+                index = -1
+            else:
+                index = indexdic.get(td.text.strip(), -1)
+                if index == 0:
+                    if len(values) > 0:
+                        print(", ".join(values))
+                        if values[0] == "LAN1":
+                            print(f"- f660a.lan1.receive {values[1]}", file=zabbix)
+                            print(f"- f660a.lan1.send {values[5]}", file=zabbix)
+                        if values[0] == "LAN2":
+                            print(f"- f660a.lan2.receive {values[1]}", file=zabbix)
+                            print(f"- f660a.lan2.send {values[5]}", file=zabbix)
+                        if values[0] == "LAN3":
+                            print(f"- f660a.lan3.receive {values[1]}", file=zabbix)
+                            print(f"- f660a.lan3.send {values[5]}", file=zabbix)
+                    values = [""] * len(columns)
     if len(values) > 0:
         print(", ".join(values))
 
